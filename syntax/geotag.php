@@ -76,9 +76,9 @@ class syntax_plugin_geotag_geotag extends SyntaxPlugin
         $lat = $this->parseNumericParameter("lat", $tags);
         $lon = $this->parseNumericParameter("lon", $tags);
         $alt = $this->parseNumericParameter("alt", $tags);
-        preg_match("/(region[:|=][\p{L}\s\w'-]*)/u", $tags, $region);
-        preg_match("/(placename[:|=][\p{L}\s\w'-]*)/u", $tags, $placename);
-        preg_match("/(country[:|=][\p{L}\s\w'-]*)/u", $tags, $country);
+        $region = $this->parseStringParameter("region", $tags);
+        $placename = $this->parseStringParameter("placename", $tags);
+        $country = $this->parseStringParameter("country", $tags);
         preg_match("(hide|unhide)", $tags, $hide);
 
         $showlocation = $this->getConf('geotag_location_prefix');
@@ -104,11 +104,28 @@ class syntax_plugin_geotag_geotag extends SyntaxPlugin
             hsc($lon),
             hsc($alt),
             $this->geohash($lat, $lon),
-            hsc(trim(substr(($region[0] ?? ''), 7))),
-            hsc(trim(substr(($placename[0] ?? ''), 10))),
-            hsc(trim(substr(($country [0] ?? ''), 8))),
+            hsc($region),
+            hsc($placename),
+            hsc($country),
             hsc($showlocation), $style
         ];
+    }
+
+    /**
+     * parses string parameter with given name
+     *
+     * @param string $name name of the parameter
+     * @param string $input text to consume
+     * @return string parameter values as string or empty string if nothing is found
+     */
+    private function parseStringParameter(string $name, string $input): string
+    {
+        $output = '';
+        $pattern = "/" . $name . "\s*[:|=]\s*([\p{L}\s\w'-]*))/u";
+        if (preg_match($pattern, $input, $matches)) {
+            $output = $matches[1];
+        }
+        return $output;
     }
 
     /**
